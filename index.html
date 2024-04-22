@@ -1,3 +1,8 @@
+<!-- 
+    Sorting Visualizer
+
+-->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +11,7 @@
     <link href="
 https://cdn.jsdelivr.net/npm/jetbrains-mono@1.0.6/css/jetbrains-mono.min.css
 " rel="stylesheet">
-    <title>Document</title>
+    <title>Sorting Visualizer</title>
 
     <style>
         #array{
@@ -23,7 +28,6 @@ https://cdn.jsdelivr.net/npm/jetbrains-mono@1.0.6/css/jetbrains-mono.min.css
             /* make text centered, white, and Jetbrains Mono font */
             text-align: center;
             color: white;
-            padding: 0 0.5vw;
             font-family: 'Jetbrains Mono', monospace;
 
             font-size: 1.5vw;
@@ -32,11 +36,31 @@ https://cdn.jsdelivr.net/npm/jetbrains-mono@1.0.6/css/jetbrains-mono.min.css
 
             margin-bottom: 1vh;
         }
+
+        #dialog{
+            background-color: white;
+            padding: 2vw;
+            border-radius: 1vw;
+            box-shadow: 0 0 1vw rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+
+            font-family: 'Jetbrains Mono', monospace;
+        }
+
+        h1 {
+            font-family: 'Jetbrains Mono', monospace;
+            text-align: center;
+            margin-bottom: 0;
+        }
     </style>
 </head>
 <body>
     <div id="array">
-
+        
     </div>
     <script>
         function fill(div, arr){
@@ -48,10 +72,20 @@ https://cdn.jsdelivr.net/npm/jetbrains-mono@1.0.6/css/jetbrains-mono.min.css
             // calculated column width in px (without suffix)
             let columnWidth = (100 / arr.length) - 0.5;
 
+            let padding = 50 / arr.length;
+
+            if (padding > 0.5) {
+                padding = 0.5;
+            }
+
+            console.log(padding);
+            
+            document.getElementById('array').style.margin = `${padding}vw`;
+
 
             // if columnWidth is too small, scale the margin to make it the same size, then halve the column width
             if(columnWidth < 0.5){
-                document.getElementById('array').style.margin = `0 0`;
+                // document.getElementById('array').style.margin = `0 0`;
                 columnWidth *= 2;
             } else {
                 document.getElementById('array').style.margin = '0 0.5vw';
@@ -59,7 +93,14 @@ https://cdn.jsdelivr.net/npm/jetbrains-mono@1.0.6/css/jetbrains-mono.min.css
 
             for(let i = 0; i < arr.length; i++){
                 let column = document.createElement('div');
-                column.style.width = columnWidth + 'vw';
+                
+
+                if (arr.length <= 35) {
+                    column.style.width = columnWidth + 'vw';
+                } else {
+                    column.style.width = `${(100 / arr.length)}vw`;
+                }
+
                 column.style.height = (90 * arr[i]/100) + 'vh';
                 column.style.display = 'inline-block';
 
@@ -71,6 +112,39 @@ https://cdn.jsdelivr.net/npm/jetbrains-mono@1.0.6/css/jetbrains-mono.min.css
             }
 
 
+        }
+
+        async function insertionSort(arr, timeToWait = 100){
+            // insertion sort the array - filling the array after each swap
+            let n = arr.length;
+
+            fill('array', arr);
+
+            for(let i = 1; i < n; i++){
+                let key = arr[i];
+                let j = i - 1;
+
+                while(j >= 0 && arr[j] > key){
+                    arr[j + 1] = arr[j];
+                    j--;
+
+                    fill('array', arr);
+                    let current_column = document.getElementById('array').children[j + 1];
+
+                    current_column.style.backgroundColor = 'green';
+                    await new Promise(r => setTimeout(r, timeToWait));
+                }
+
+                arr[j + 1] = key;
+
+                fill('array', arr);
+                let current_column = document.getElementById('array').children[j + 1];
+
+                current_column.style.backgroundColor = 'green';
+                await new Promise(r => setTimeout(r, timeToWait));
+            }
+
+            await completed(timeToWait);
         }
 
         async function bubbleSort(arr, timeToWait = 100){
@@ -102,6 +176,217 @@ https://cdn.jsdelivr.net/npm/jetbrains-mono@1.0.6/css/jetbrains-mono.min.css
 
             } while(swapped);
 
+            await completed(timeToWait);
+        }
+
+        async function quickSort(arr, timeToWait = 100){
+            // quick sort the array - filling the array after each swap
+            let n = arr.length;
+
+            fill('array', arr);
+
+            async function partition(low, high){
+                let pivot = arr[high];
+                let i = low - 1;
+
+                for(let j = low; j < high; j++){
+                    if(arr[j] < pivot){
+                        i++;
+
+                        let temp = arr[i];
+                        arr[i] = arr[j];
+                        arr[j] = temp;
+
+                        fill('array', arr);
+                        let current_column = document.getElementById('array').children[j];
+
+                        current_column.style.backgroundColor = 'green';
+                        await new Promise(r => setTimeout(r, timeToWait));
+                    }
+                }
+
+                let temp = arr[i + 1];
+                arr[i + 1] = arr[high];
+                arr[high] = temp;
+
+                fill('array', arr);
+                let current_column = document.getElementById('array').children[high];
+
+                current_column.style.backgroundColor = 'green';
+                await new Promise(r => setTimeout(r, timeToWait));
+
+                return i + 1;
+            }
+
+            async function quickSortHelper(low, high){
+                if(low < high){
+                    let pi = await partition(low, high);
+
+                    await quickSortHelper(low, pi - 1);
+                    await quickSortHelper(pi + 1, high);
+                }
+            }
+
+            await quickSortHelper(0, n - 1);
+
+            await completed(timeToWait);
+        }
+
+        async function mergeSort(arr, timeToWait = 100){
+            // merge sort the array - filling the array after each swap
+            let n = arr.length;
+
+            fill('array', arr);
+
+            async function merge(low, mid, high){
+                let n1 = mid - low + 1;
+                let n2 = high - mid;
+
+                let L = new Array(n1);
+                let R = new Array(n2);
+
+                for(let i = 0; i < n1; i++){
+                    L[i] = arr[low + i];
+                }
+
+                for(let i = 0; i < n2; i++){
+                    R[i] = arr[mid + 1 + i];
+                }
+
+                let i = 0;
+                let j = 0;
+                let k = low;
+
+                while(i < n1 && j < n2){
+                    if(L[i] <= R[j]){
+                        arr[k] = L[i];
+                        i++;
+                    } else {
+                        arr[k] = R[j];
+                        j++;
+                    }
+
+                    fill('array', arr);
+                    let current_column = document.getElementById('array').children[k];
+
+                    current_column.style.backgroundColor = 'green';
+                    await new Promise(r => setTimeout(r, timeToWait));
+
+                    k++;
+                }
+
+                while(i < n1){
+                    arr[k] = L[i];
+                    i++;
+                    k++;
+
+                    fill('array', arr);
+                    let current_column = document.getElementById('array').children[k - 1];
+
+                    current_column.style.backgroundColor = 'green';
+                    await new Promise(r => setTimeout(r, timeToWait));
+                }
+
+                while(j < n2){
+                    arr[k] = R[j];
+                    j++;
+                    k++;
+
+                    fill('array', arr);
+                    let current_column = document.getElementById('array').children[k - 1];
+
+                    current_column.style.backgroundColor = 'green';
+                    await new Promise(r => setTimeout(r, timeToWait));
+                }
+            }
+
+            async function mergeSortHelper(low, high){
+                if(low < high){
+                    let mid = Math.floor((low + high) / 2);
+
+                    await mergeSortHelper(low, mid);
+                    await mergeSortHelper(mid + 1, high);
+
+                    await merge(low, mid, high);
+                }
+            }
+
+            await mergeSortHelper(0, n - 1);
+
+            await completed(timeToWait);
+        }
+
+        async function heapSort(arr, timeToWait = 100){
+            // heap sort the array - filling the array after each swap
+            let n = arr.length;
+
+            fill('array', arr);
+
+            async function heapify(n, i){
+                let largest = i;
+                let l = 2 * i + 1;
+                let r = 2 * i + 2;
+
+                if(l < n && arr[l] > arr[largest]){
+                    largest = l;
+                }
+
+                if(r < n && arr[r] > arr[largest]){
+                    largest = r;
+                }
+
+                if(largest != i){
+                    let swap = arr[i];
+                    arr[i] = arr[largest];
+                    arr[largest] = swap;
+
+                    fill('array', arr);
+                    let current_column = document.getElementById('array').children[i];
+
+                    current_column.style.backgroundColor = 'green';
+                    await new Promise(r => setTimeout(r, timeToWait));
+
+                    await heapify(n, largest);
+                }
+            }
+
+            async function heapSortHelper(n){
+                for(let i = Math.floor(n / 2) - 1; i >= 0; i--){
+                    await heapify(n, i);
+                }
+
+                for(let i = n - 1; i > 0; i--){
+                    let temp = arr[0];
+                    arr[0] = arr[i];
+                    arr[i] = temp;
+
+                    fill('array', arr);
+                    let current_column = document.getElementById('array').children[i];
+
+                    current_column.style.backgroundColor = 'green';
+                    await new Promise(r => setTimeout(r, timeToWait));
+
+                    await heapify(i, 0);
+                }
+            }
+
+            await heapSortHelper(n);
+
+            await completed(timeToWait);
+        }
+
+        async function completed(timeToWait = 100) {
+
+            let n = document.getElementById('array').children.length;
+
+            for(let i = 0; i < n; i++){
+                let current_column = document.getElementById('array').children[i];
+
+                current_column.style.backgroundColor = 'green';
+                await new Promise(r => setTimeout(r, timeToWait));
+                current_column.style.backgroundColor = 'red';
+            }
+
             // make all columns green (and make them jump)
             for(let i = 0; i < n; i++){
                 let current_column = document.getElementById('array').children[i];
@@ -117,6 +402,231 @@ https://cdn.jsdelivr.net/npm/jetbrains-mono@1.0.6/css/jetbrains-mono.min.css
                     current_column.style.transform = 'translateY(0)';
                 }
             }, 300);
+        }
+
+        async function countingSort(arr, timeToWait = 100){
+            // counting sort the array - filling the array after each swap
+            let n = arr.length;
+
+            fill('array', arr);
+
+            let max = Math.max(...arr);
+            let min = Math.min(...arr);
+
+            let range = max - min + 1;
+
+            let count = new Array(range).fill(0);
+            let output = new Array(n);
+
+            for(let i = 0; i < n; i++){
+                count[arr[i] - min]++;
+            }
+
+            for(let i = 1; i < range; i++){
+                count[i] += count[i - 1];
+            }
+
+            for(let i = n - 1; i >= 0; i--){
+                output[count[arr[i] - min] - 1] = arr[i];
+                count[arr[i] - min]--;
+            }
+
+            for(let i = 0; i < n; i++){
+                arr[i] = output[i];
+
+                fill('array', arr);
+                let current_column = document.getElementById('array').children[i];
+
+                current_column.style.backgroundColor = 'green';
+                await new Promise(r => setTimeout(r, timeToWait));
+            }
+
+            await completed(timeToWait);
+        }
+
+        async function radixSort(arr, timeToWait = 100){
+            // radix sort the array - filling the array after each swap
+            let n = arr.length;
+
+            fill('array', arr);
+
+            let max = Math.max(...arr);
+
+            for(let exp = 1; Math.floor(max / exp) > 0; exp *= 10){
+                let output = new Array(n);
+                let count = new Array(10).fill(0);
+
+                for(let i = 0; i < n; i++){
+                    count[Math.floor(arr[i] / exp) % 10]++;
+                }
+
+                for(let i = 1; i < 10; i++){
+                    count[i] += count[i - 1];
+                }
+
+                for(let i = n - 1; i >= 0; i--){
+                    output[count[Math.floor(arr[i] / exp) % 10] - 1] = arr[i];
+                    count[Math.floor(arr[i] / exp) % 10]--;
+                }
+
+                for(let i = 0; i < n; i++){
+                    arr[i] = output[i];
+
+                    fill('array', arr);
+                    let current_column = document.getElementById('array').children[i];
+
+                    current_column.style.backgroundColor = 'green';
+                    await new Promise(r => setTimeout(r, timeToWait));
+                }
+            }
+
+            await completed(timeToWait);
+        }
+
+        async function randomQuickSort(arr, timeToWait = 100){
+            // quick sort the array - filling the array after each swap
+            let n = arr.length;
+
+            fill('array', arr);
+
+            async function partition(low, high){
+                let pivot = arr[high];
+                let i = low - 1;
+
+                for(let j = low; j < high; j++){
+                    if(arr[j] < pivot){
+                        i++;
+
+                        let temp = arr[i];
+                        arr[i] = arr[j];
+                        arr[j] = temp;
+
+                        fill('array', arr);
+                        let current_column = document.getElementById('array').children[j];
+
+                        current_column.style.backgroundColor = 'green';
+                        await new Promise(r => setTimeout(r, timeToWait));
+                    }
+                }
+
+                let temp = arr[i + 1];
+                arr[i + 1] = arr[high];
+                arr[high] = temp;
+
+                fill('array', arr);
+                let current_column = document.getElementById('array').children[high];
+
+                current_column.style.backgroundColor = 'green';
+                await new Promise(r => setTimeout(r, timeToWait));
+
+                return i + 1;
+            }
+
+            async function quickSortHelper(low, high){
+                if(low < high){
+                    let pi = await partition(low, high);
+
+                    await quickSortHelper(low, pi - 1);
+                    await quickSortHelper(pi + 1, high);
+                }
+            }
+
+            await quickSortHelper(0, n - 1);
+
+            await completed(timeToWait);
+        }
+
+        async function selectionSort(arr, timeToWait = 100){
+            // selection sort the array - filling the array after each swap
+            let n = arr.length;
+
+            fill('array', arr);
+
+            for(let i = 0; i < n - 1; i++){
+                let min_index = i;
+
+                for(let j = i + 1; j < n; j++){
+                    if(arr[j] < arr[min_index]){
+                        min_index = j;
+                    }
+                }
+
+                let temp = arr[min_index];
+                arr[min_index] = arr[i];
+                arr[i] = temp;
+
+                fill('array', arr);
+                let current_column = document.getElementById('array').children[i];
+
+                current_column.style.backgroundColor = 'green';
+                await new Promise(r => setTimeout(r, timeToWait));
+            }
+
+            await completed(timeToWait);
+        }
+
+        async function randomSort(arr, timeToWait = 100){
+            // random sort the array - filling the array after each swap
+            let n = arr.length;
+
+            fill('array', arr);
+
+            // shuffle the array, then fill the array. if it is not sorted, shuffle again
+            while(true){
+                for(let i = 0; i < n; i++){
+                    let j = Math.floor(Math.random() * n);
+
+                    let temp = arr[i];
+                    arr[i] = arr[j];
+                    arr[j] = temp;
+                }
+
+                fill('array', arr);
+
+                let sorted = true;
+
+                for(let i = 0; i < n - 1; i++){
+                    if(arr[i] > arr[i + 1]){
+                        sorted = false;
+                        break;
+                    }
+                }
+
+                if(sorted){
+                    break;
+                }
+
+                await new Promise(r => setTimeout(r, timeToWait));
+            }
+
+            await completed(timeToWait);
+        }
+
+        async function cosmicSort(arr, timeToWait = 100){
+            // cosmic sort the array - filling the array after each swap
+            let n = arr.length;
+
+            fill('array', arr);
+
+            // check if the array is sorted. if not, wait timeToWait ms and check again
+            while(true){
+                let sorted = true;
+
+                for(let i = 0; i < n - 1; i++){
+                    if(arr[i] > arr[i + 1]){
+                        sorted = false;
+                        break;
+                    }
+                }
+
+                if(sorted){
+                    break;
+                }
+
+                await new Promise(r => setTimeout(r, timeToWait));
+            }
+
+            await completed(timeToWait);
         }
 
         function startSorting(){
@@ -150,49 +660,74 @@ https://cdn.jsdelivr.net/npm/jetbrains-mono@1.0.6/css/jetbrains-mono.min.css
                 case 'heap':
                     heapSort(arr, speed);
                     break;
+                case 'insertion':
+                    insertionSort(arr, speed);
+                    break;
+                case 'counting':
+                    countingSort(arr, speed);
+                    break;
+                case 'radix':
+                    radixSort(arr, speed);
+                    break;
+                case 'randomquick':
+                    randomQuickSort(arr, speed);
+                    break;
+                case 'selection':
+                    selectionSort(arr, speed);
+                    break;
+                case 'random':
+                    randomSort(arr, speed);
+                    break;
+                case 'cosmic':
+                    cosmicSort(arr, speed);
+                    break;
             }
         }
 
         window.onload = () => {
             // now, create a dialog box to ask the user for speed, algorithm, and array size
             // superimpose the dialog box on the screen
+
             let dialog = document.createElement('div');
-            dialog.style.position = 'absolute';
-            dialog.style.top = '50%';
-            dialog.style.left = '50%';
-            dialog.style.transform = 'translate(-50%, -50%)';
-            dialog.style.backgroundColor = 'white';
-            dialog.style.padding = '2vw';
-            dialog.style.borderRadius = '1vw';
-            dialog.style.boxShadow = '0 0 1vw rgba(0, 0, 0, 0.5)';
-            dialog.style.zIndex = '1000';
             dialog.id = 'dialog';
 
             dialog.innerHTML = `
                 <h1>Sorting Visualizer</h1>
-                <label for="speed" id="speedlabel">Speed: 100ms</label>
+                <label for="speed" id="speedlabel">Speed: <b>100ms</b></label>
                 <input type="range" id="speed" min="1" max="300" step=1 value="100">
                 <br>
                 <label for="algorithm">Algorithm:</label>
                 <select id="algorithm">
                     <option value="bubble">Bubble Sort</option>
+                    <option value="selection">Selection Sort</option>
                     <option value="quick">Quick Sort</option>
                     <option value="merge">Merge Sort</option>
                     <option value="heap">Heap Sort</option>
+                    <option value="insertion">Insertion Sort</option>
+                    <option value="counting">Counting Sort</option>
+                    <option value="radix">Radix Sort</option>
+                    <option value="randomquick">Randomized Quick Sort</option>
+                    <option value="random">Random Sort</option>
+                    <option value="cosmic">Cosmic Sort</option>
                 </select>
                 <br>
-                <label for="size">Array Size:</label>
-                <input type="number" id="size" min="5" max="100" value="20">
+                <label for="size" id="sizelabel">Size: <b>020</b></label>
+                <input type="range" id="size" min="1" max="400" step=1 value="20">
+                <!-- Why, it looks as if you are poking around in the HTML! Well, the good news is that the max is only limited by your computer. It is just limited to allow for a better UX. So feel free to change it! -->
                 <br>
                 <button onclick="startSorting()">Start</button>
             `;
 
-
-
             document.body.appendChild(dialog);
                         // now add an event listener to the dialog box to display the current speed value in the speed label
                         document.getElementById('speed').addEventListener('input', () => {
-                document.getElementById('speedlabel').innerText = 'Speed: ' + document.getElementById('speed').value.toString().padStart(3, '0') + 'ms';
+                document.getElementById('speedlabel').innerHTML = 'Speed: <b>' + document.getElementById('speed').value.toString().padStart(3, '0') + 'ms</b>';
+            });
+
+            document.body.appendChild(dialog);
+                        // now add an event listener to the dialog box to display the current speed value in the speed label
+                        document.getElementById('size').addEventListener('input', () => {
+                document.getElementById('sizelabel').innerHTML = 'Size: <b>' + document.getElementById('size').value.toString().padStart(3, '0') + '</b>';
             });
         }
     </script>
