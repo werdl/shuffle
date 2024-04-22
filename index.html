@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="
+https://cdn.jsdelivr.net/npm/jetbrains-mono@1.0.6/css/jetbrains-mono.min.css
+" rel="stylesheet">
+    <title>Document</title>
+
+    <style>
+        #array{
+            height: 95vh;
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-end; /* Updated property */
+
+            margin-bottom: 0;
+        }
+
+        #array div{
+            padding-bottom: 1.5vw;
+            /* make text centered, white, and Jetbrains Mono font */
+            text-align: center;
+            color: white;
+            font-family: 'Jetbrains Mono', monospace;
+            margin: 0 0.5vw;
+
+            font-size: 1.5vw;
+
+            background-color: red;
+
+            margin-bottom: 1vh;
+        }
+    </style>
+</head>
+<body>
+    <div id="array">
+
+    </div>
+    <script>
+        function fill(div, arr){
+            // fill the div with columns, given that arr[n] will be less than 100, make the column height arr[n]% of the div height
+
+            // first, clear the div
+            document.getElementById('array').innerHTML = '';
+
+            // calculated column width in px (without suffix)
+            let columnWidth = (100 / arr.length) - (1);
+
+
+            for(let i = 0; i < arr.length; i++){
+                let column = document.createElement('div');
+                column.style.width = columnWidth + 'vw';
+                column.style.height = (90 * arr[i]/100) + 'vh';
+                column.style.display = 'inline-block';
+
+                column.innerText = arr[i];
+
+                document.getElementById(div).appendChild(column);
+            }
+        }
+
+        async function bubbleSort(arr){
+            // bubble sort the array - filling the array after each swap
+            let n = arr.length;
+            let swapped = false;
+
+            let timeToWait = arr.length / 2 * 8;
+
+            fill('array', arr);
+
+            do{
+                // make the current column green
+
+                swapped = false;
+                for(let i = 0; i < n - 1; i++){
+                    if(arr[i] > arr[i + 1]){
+                        let temp = arr[i];
+                        arr[i] = arr[i + 1];
+                        arr[i + 1] = temp;
+
+                        fill('array', arr);
+                        let current_column = document.getElementById('array').children[i + 1];
+
+                        current_column.style.backgroundColor = 'green';
+                        await new Promise(r => setTimeout(r, timeToWait));
+
+                        swapped = true;
+                    }
+                }
+
+            } while(swapped);
+
+            // make all columns green (and make them jump)
+            for(let i = 0; i < n; i++){
+                let current_column = document.getElementById('array').children[i];
+                current_column.style.backgroundColor = 'green';
+                current_column.style.transform = 'translateY(-5vh)';
+            }
+
+            setTimeout(() => {
+                // make all columns red again
+                for(let i = 0; i < n; i++){
+                    let current_column = document.getElementById('array').children[i];
+                    current_column.style.backgroundColor = 'red';
+                    current_column.style.transform = 'translateY(0)';
+                }
+            }, 300);
+        }
+
+        window.onload = () => {
+            // generate an array
+            let arr = [];
+
+            // now puff it up to 20 elements
+            while(arr.length < 20){
+                arr.push(Math.floor(Math.random() * 100));
+            }
+
+            bubbleSort(arr);
+        }
+    </script>
+</body>
+</html>
